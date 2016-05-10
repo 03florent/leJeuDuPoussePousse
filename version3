@@ -1,0 +1,264 @@
+--les principaux changements sont sur la procédure tout d'un joueur qui vérifie maintenant si le coup est permit ou non
+with entrees_sorties; use entrees_sorties;
+procedure programmePrincipale is
+--déclaration types constantes etc...
+type ValeurCase is (NOIR,BLANC,RIEN);
+type Direction is (NOR,SUD,EST,WES);
+N:constant Integer:=26;
+subtype Intervalle is Integer range 1..N;
+type Damier is array (Intervalle,Intervalle) of ValeurCase;
+--procédure pour afficher le damier dans l'invite de commande en fonction de la taille choisit
+procedure afficherDamier(tab:in Damier;tailleChoisit:In Integer)is
+--les deux sous programmes suivants sont pour afficher le damier
+procedure afficherCase(x:In ValeurCase) is
+begin
+if x = RIEN then
+	put("|   ");
+else
+	if x = BLANC then
+		put("| B ");
+	else
+		put("| N ");
+	end if;
+end if;
+put("|");
+end afficherCase;
+procedure afficherSeparation(tailleChoisit:In Integer) is
+begin
+	for i in Integer range 1..tailleChoisit loop
+		put("-----");
+	end loop;
+	
+end afficherSeparation;
+--begin de afficherDamier
+begin
+	afficherSeparation(tailleChoisit);
+	new_line;
+	for i in Integer range 1..tailleChoisit loop
+		for j in Integer range 1..tailleChoisit loop
+			afficherCase(tab(i,j));
+		end loop;
+	new_line;
+	afficherSeparation(tailleChoisit);
+	new_line;
+	end loop;
+end afficherDamier;
+--la procedure initialisation permet de choisir qui commence et qui prend quels pions ainsi que la taille du damier
+procedure initialisation(j1,j2:out ValeurCase;indice:out Integer;tailleChoisit:out Integer)is
+choixCouleurEnString:String:="BLAN";
+--begin d'initialisation
+begin
+	put("quel taille de damier souhaitez vous?");
+	get(tailleChoisit);
+	put("le joueur1 veut-il être blanc ou noir? (tapez 'NOIR' ou 'BLAN')");
+	get(choixCouleurEnString);
+	put(choixCouleurEnString);
+	if ValeurCase'image(NOIR)= choixCouleurEnString then
+		j1:=NOIR;
+	else
+		j1:=BLANC;
+	end if;
+	if j1 = BLANC then
+		j2:= NOIR;
+	else
+		j2:=BLANC;
+	end if;
+	put("qui commence? entrez '1' ou '2' qui correspondent respectivement à joueur 1 et joueur 2 ");
+	get(indice);
+end initialisation;
+--procedure qui permet de faire jouer un tour à un joueur
+procedure toursDUnJoueur(tab:in out Damier; joueur:in ValeurCase;tailleChoisit:In Integer) is
+--procedure qui permet d'insérer un pion
+procedure insererPion(tab:in out Damier; joueur:in ValeurCase;dir0:in Direction;posInsertion,tailleChoisit:in Integer) is
+--déclaration de insererPion
+n,x,y,z1,z2:Integer:=1;
+pionInserer:Boolean:= False;
+--begin de insererPion
+begin
+	case dir0 is
+		when NOR => while not pionInserer loop
+						if tab(n,posInsertion) = RIEN or n=tailleChoisit then
+							while n/=1 loop
+								tab(n,posInsertion):=tab(n-1,posInsertion);
+								n:=n-1;
+							end loop;
+							tab(n,posInsertion):=joueur;
+							pionInserer:=TRUE;
+						else
+							n:=n+1;
+						end if;
+					end loop;
+		when SUD => while not pionInserer loop
+						if tab(tailleChoisit-n+1,posInsertion) = RIEN or n=tailleChoisit then
+							while n/=1 loop
+								tab(tailleChoisit-(n-1),posInsertion):=tab(tailleChoisit-(n-1-1),posInsertion);-------------------------------------------
+								n:=n-1;
+							end loop;
+							tab(tailleChoisit-n+1,posInsertion):=joueur;
+							pionInserer:=TRUE;
+						else
+							n:=n+1;
+						end if;
+					end loop;
+		when EST => while not pionInserer loop
+						if tab(posInsertion,tailleChoisit-n+1) = RIEN or n=tailleChoisit then
+							while n/=1 loop
+								tab(posInsertion,tailleChoisit-(n-1)):=tab(posInsertion,tailleChoisit-(n-1)+1);
+								n:=n-1;
+							end loop;
+							tab(posInsertion,tailleChoisit-n+1):=joueur;
+							pionInserer:=TRUE;
+						else
+							n:=n+1;
+						end if;
+					end loop;
+		when WES => while not pionInserer loop
+						if tab(posInsertion,n) = RIEN or n=tailleChoisit then
+							while n/=1 loop
+								tab(posInsertion,n):=tab(posInsertion,n-1);
+								n:=n-1;
+							end loop;
+							tab(posInsertion,n):=joueur;
+							pionInserer:=TRUE;
+						else
+							n:=n+1;
+						end if;
+					end loop;
+	end case;
+end insererPion;
+procedure saisirEntrees(dir1:out Direction;posInsertion:out Integer;tailleChoisit: In Integer)is
+--déclaration saisirEntrees
+directionJuste,positionJuste:Boolean:=False;
+directionEnCharacter:string:="lol";
+--begin de saisirEntrees
+begin
+	put("DEPUIS quel direction voulez vous inserer le pion? (les directions a taper sont 'SUD' 'NOR' 'EST' 'WES')");
+	while not directionJuste loop
+		get(directionEnCharacter);
+		if directionEnCharacter = "NOR" or directionEnCharacter = "SUD" or directionEnCharacter = "EST" or directionEnCharacter = "WES" then
+			directionJuste:= True;
+		else
+			put("réentrez les valeurs, elles sont eronees");
+		end if;
+	end loop;
+	if Direction'image(NOR) = directionEnCharacter then
+		dir1:=NOR;
+	elsif Direction'image(SUD) = directionEnCharacter then
+		dir1:=SUD;
+	elsif Direction'image(EST) = directionEnCharacter then
+		dir1:=EST;
+	else
+		dir1:=WES;
+	end if;
+	put("dans quel case voulez vous l'insérer?");
+	while not positionJuste loop
+		get(posInsertion);
+		if posInsertion >= 1 and posInsertion <=tailleChoisit then
+			positionJuste:=True;
+		else
+			put("réentrez les valeurs, elles sont eronees");
+		end if;
+	end loop;
+end saisirEntrees;
+--déclaration tours d'un joueur
+dir2:Direction;
+posInsertion,x,y:Integer;
+saisitCorrecte:Boolean:=False;
+--begin du tours d'un joueur
+begin
+	while not saisitCorrecte loop
+		saisirEntrees(dir2,posInsertion,tailleChoisit);
+		case dir2 is
+			when NOR =>
+				x:=tailleChoisit;
+				y:=posInsertion;
+			when SUD =>
+				x:=1;
+				y:=posInsertion;
+			when EST =>
+				x:=posInsertion;
+				y:=1;
+			when WES =>
+				x:=posInsertion;
+				y:=tailleChoisit;
+		end case;
+		if tab(x,y)/=joueur and tab(x,y)/=RIEN then
+			case dir2 is
+				when NOR | SUD =>
+					for i in Integer range 1..tailleChoisit loop
+						if tab(i,posInsertion)=RIEN then
+							saisitCorrecte:=True;
+						end if;
+					end loop;
+				when EST | WES => 
+					for i in Integer range 1..tailleChoisit loop
+						if tab(posInsertion,i)=RIEN then
+							saisitCorrecte:=True;
+						end if;
+					end loop;
+			end case;
+		else
+			saisitCorrecte:=True;
+		end if;
+		if not saisitCorrecte then
+			put("réentrez les valeurs, il y a un mouvement impossible");
+		end if;
+	end loop;
+	insererPion(tab,joueur,dir2,posInsertion,tailleChoisit);
+end toursDUnJoueur;
+--procédure de vérification de fin du jeu renvoyant le gagnant et le boolean qui permetra de sortir de la boucle
+procedure verification(tab:In Damier;tailleGrille:In Integer;joueurGagnant:out ValeurCase;partieTerminer:out Boolean) is
+--déclaration verification
+i,j:Integer:=1;
+cptLigne,cptColone:Integer:=0;
+--begin de verification
+begin
+	partieTerminer:= False;
+	while i /= tailleGrille+1 and not partieTerminer loop
+		while j/=(tailleGrille) and not partieTerminer loop
+			if tab(i,j)=tab(i,j+1) and tab(i,j)/=RIEN then
+				cptLigne:=cptLigne+1;
+			end if;
+			if tab(j,i)=tab(j+1,i) and tab(j,i)/=RIEN then
+				cptColone:= cptColone+1;
+			end if;
+			j:=j+1;
+			if cptLigne=tailleGrille-1 then
+				partieTerminer:= True;
+				joueurGagnant:=tab(i,j);
+			end if;
+			if cptColone=tailleGrille-1 then
+				partieTerminer:=True;
+				joueurGagnant:=tab(j,i);
+			end if;
+		end loop;
+		i:=i+1;
+		j:=1;
+		cptColone:=0;
+		cptLigne:=0;
+	end loop;
+end verification;
+
+--déclaration du programme principale
+grille:Damier:=(others=>(others => RIEN));
+joueurActuel,joueur1,joueur2,joueurGagnant:ValeurCase;
+tourDuJoueur,tailleGrille:Integer;
+finDuJeu:Boolean:=False;
+--begin du programme principale
+begin
+	initialisation(joueur1,joueur2,tourDuJoueur,tailleGrille);
+	afficherDamier(grille,tailleGrille);
+	while not finDuJeu loop
+		if tourDuJoueur mod 2 = 0 then
+			joueurActuel:=joueur2;
+		else
+			joueurActuel:=joueur1;
+		end if;
+		toursDUnJoueur(grille,joueurActuel,tailleGrille);
+		afficherDamier(grille,tailleGrille);
+		tourDuJoueur:=tourDuJoueur+1;
+		verification(grille,tailleGrille,joueurGagnant,finDuJeu);
+	end loop;
+	put("le gagnant est le joueur qui a les pions ");
+	put(ValeurCase'image(joueurGagnant));
+end programmePrincipale;
